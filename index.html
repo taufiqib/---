@@ -104,11 +104,21 @@ body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Heebo",Arial,
 
 @media (max-width:860px){
   .menu-btn{display:block;}
-  .sidenav{position:fixed;inset-inline-start:auto;inset-inline-end:0;top:0;bottom:0;z-index:100;transform:translateX(-105%);transition:transform .2s;width:250px;padding-top:calc(64px + env(safe-area-inset-top,0px));box-shadow:0 0 30px rgba(0,0,0,.3);}
-  html[dir="rtl"] .sidenav{transform:translateX(105%);}
-  .sidenav.open{transform:translateX(0) !important;}
+  .topbar-sub{display:none;}
+  .topbar{gap:8px;padding:10px 12px;}
+  .topbar-title{font-size:.98rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sidenav{position:fixed;right:0;left:auto;top:0;bottom:0;z-index:100;width:min(280px,82vw);
+    transform:translateX(100%);transition:transform .22s ease;
+    padding-top:calc(64px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+    overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 0 30px rgba(0,0,0,.35);}
+  .sidenav.open{transform:translateX(0);}
+  .nav-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;opacity:0;pointer-events:none;transition:opacity .22s;}
+  .nav-backdrop.show{opacity:1;pointer-events:auto;}
   .layout{display:block;}
+  .main{padding:14px 12px;}
+  .exam-bar{top:calc(52px + env(safe-area-inset-top,0px));}
 }
+
 
 :root[data-theme="dark"]{
   --bg:#12151d; --card:#1b202c; --ink:#e8ebf3; --muted:#9aa4bd;
@@ -140,6 +150,7 @@ body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Heebo",Arial,
 </header>
 
 <div class="layout">
+  <div id="navBackdrop" class="nav-backdrop"></div>
   <nav id="sideNav" class="sidenav"><div id="navList"></div></nav>
   <main id="main" class="main">
     <section id="homeView"></section>
@@ -934,15 +945,12 @@ document.addEventListener("DOMContentLoaded", function(){
   initTheme();
   buildNav();
   renderHome();
-  el("menuBtn").addEventListener("click", function(){
-    el("sideNav").classList.toggle("open");
+  el("menuBtn").addEventListener("click", function(ev){
+    ev.stopPropagation();
+    if(el("sideNav").classList.contains("open")) closeNav(); else openNav();
   });
-  document.addEventListener("click", function(ev){
-    var nav = el("sideNav");
-    if(nav.classList.contains("open") && !nav.contains(ev.target) && ev.target.id !== "menuBtn"){
-      nav.classList.remove("open");
-    }
-  });
+  el("navBackdrop").addEventListener("click", closeNav);
+  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape") closeNav(); });
 });
 
 function buildNav(){
@@ -976,7 +984,8 @@ function buildNav(){
     });
   }
 }
-function closeNav(){ el("sideNav").classList.remove("open"); }
+function openNav(){ el("sideNav").classList.add("open"); el("navBackdrop").classList.add("show"); document.body.style.overflow = "hidden"; }
+function closeNav(){ el("sideNav").classList.remove("open"); el("navBackdrop").classList.remove("show"); document.body.style.overflow = ""; }
 function markNav(sel){
   navList.querySelectorAll(".nav-item").forEach(function(it){ it.classList.remove("active"); });
   if(sel){ var t = el(sel); if(t) t.classList.add("active"); }
